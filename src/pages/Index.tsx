@@ -10,7 +10,7 @@ const Index = () => {
   const {
     tree, loading: treeLoading,
     canUndo, canRedo, undo, redo,
-    addChild, deleteNode, renameNode,
+    addChild, deleteNode, renameNode, toggleLeaf,
     addSection, deleteSection, renameSection,
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
   } = useTreeData();
