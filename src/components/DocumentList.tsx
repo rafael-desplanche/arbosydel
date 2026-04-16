@@ -1,4 +1,4 @@
-import { ExternalLink, Link as LinkIcon } from "lucide-react";
+import { ExternalLink, Link as LinkIcon, Pencil } from "lucide-react";
 import type { DocSection } from "@/data/treeData";
 import { makeKey } from "@/hooks/useDocumentLinks";
 import { cn } from "@/lib/utils";
@@ -35,13 +35,14 @@ export function DocumentList({ docs, treePath, links, onEditLink }: Props) {
                       rel="noopener noreferrer"
                       className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-link-bg text-link-fg border border-link-fg text-[10px] font-medium hover:opacity-80 transition-opacity"
                     >
-                      <ExternalLink className="w-2.5 h-2.5" /> Ouvrir
+                      <ExternalLink className="w-2.5 h-2.5" /> Accéder au document
                     </a>
                     <button
                       onClick={() => onEditLink(treePath, group.section, item.name, url)}
-                      className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-link-bg text-link-fg border border-link-fg text-[10px] font-medium hover:opacity-80 transition-opacity"
+                      className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                      title="Modifier le lien"
                     >
-                      Modifier
+                      <Pencil className="w-3 h-3" />
                     </button>
                   </>
                 ) : (
@@ -49,7 +50,7 @@ export function DocumentList({ docs, treePath, links, onEditLink }: Props) {
                     onClick={() => onEditLink(treePath, group.section, item.name, "")}
                     className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-dashed border-muted-foreground/30 text-muted-foreground text-[10px] hover:border-link-fg hover:text-link-fg hover:bg-link-bg transition-all"
                   >
-                    <LinkIcon className="w-2.5 h-2.5" /> Lien
+                    <Pencil className="w-2.5 h-2.5" /> Ajouter un lien
                   </button>
                 )}
               </div>
