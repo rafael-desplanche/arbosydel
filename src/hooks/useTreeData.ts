@@ -85,6 +85,12 @@ export function useTreeData() {
       for (const idx of parentPath) {
         current = current.children![idx];
       }
+
+      if (current.leaf) {
+        delete current.leaf;
+        delete current.docs;
+      }
+
       if (!current.children) current.children = [];
       current.children.push({ label, children: [] });
       saveTree(newTree);
