@@ -6,7 +6,17 @@ import { LinkModal } from "@/components/LinkModal";
 import { Pencil, Redo2, Undo2 } from "lucide-react";
 
 const Index = () => {
-  const { links, loading: linksLoading, saveLink, removeLink, linkCount } = useDocumentLinks();
+  const {
+    links,
+    docReferences,
+    referenceOptions,
+    loading: linksLoading,
+    saveLink,
+    removeLink,
+    createReference,
+    setDocumentReference,
+    linkCount,
+  } = useDocumentLinks();
   const {
     tree, loading: treeLoading,
     canUndo, canRedo, undo, redo,
@@ -116,7 +126,10 @@ const Index = () => {
           expanded={expanded}
           globalToggle={globalToggle}
           links={links}
+          docReferences={docReferences}
+          referenceOptions={referenceOptions}
           onEditLink={handleEditLink}
+          onReferenceDocument={setDocumentReference}
           actions={actions}
           editMode={editMode}
         />
@@ -127,6 +140,7 @@ const Index = () => {
         docName={modal.docName}
         currentUrl={modal.currentUrl}
         onSave={handleSave}
+        onCreateReference={createReference}
         onRemove={handleRemove}
         onClose={() => setModal((m) => ({ ...m, open: false }))}
       />

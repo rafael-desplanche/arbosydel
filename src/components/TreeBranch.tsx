@@ -26,7 +26,10 @@ interface Props {
   expanded: boolean | undefined;
   globalToggle: number;
   links: Record<string, string>;
+  docReferences: Record<string, string>;
+  referenceOptions: string[];
   onEditLink: (treePath: string, section: string, docName: string, currentUrl: string) => void;
+  onReferenceDocument: (treePath: string, section: string, docName: string, referenceName: string) => Promise<boolean>;
   actions: TreeActions;
   editMode: boolean;
 }
@@ -42,7 +45,21 @@ const tagColors: Record<string, string> = {
   pink: "bg-tag-pink text-tag-pink-fg",
 };
 
-export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggle, links, onEditLink, actions, editMode }: Props) {
+export function TreeBranch({
+  node,
+  path,
+  indexPath,
+  depth,
+  expanded,
+  globalToggle,
+  links,
+  docReferences,
+  referenceOptions,
+  onEditLink,
+  onReferenceDocument,
+  actions,
+  editMode,
+}: Props) {
   const hasChildren = !!(node.children && node.children.length > 0);
   const hasContent = hasChildren || node.leaf;
   const defaultOpen = depth < 2;
@@ -159,7 +176,10 @@ export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggl
               expanded={expanded}
               globalToggle={globalToggle}
               links={links}
+              docReferences={docReferences}
+              referenceOptions={referenceOptions}
               onEditLink={onEditLink}
+              onReferenceDocument={onReferenceDocument}
               actions={actions}
               editMode={editMode}
             />
@@ -183,7 +203,10 @@ export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggl
           treePath={currentPath}
           nodePath={indexPath}
           links={links}
+          docReferences={docReferences}
+          referenceOptions={referenceOptions}
           onEditLink={onEditLink}
+          onReferenceDocument={onReferenceDocument}
           actions={actions}
           editMode={editMode}
         />
