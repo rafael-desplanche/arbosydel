@@ -71,30 +71,6 @@ export type Database = {
         }
         Relationships: []
       }
-      extraction_requests: {
-        Row: {
-          created_at: string
-          details: string | null
-          id: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          details?: string | null
-          id?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          details?: string | null
-          id?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       tree_config: {
         Row: {
           created_at: string
