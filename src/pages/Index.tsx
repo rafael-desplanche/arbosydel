@@ -1,16 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTreeData } from "@/hooks/useTreeData";
+import { useDocumentLinks } from "@/hooks/useDocumentLinks";
 import { useExtractionRequests } from "@/hooks/useExtractionRequests";
 import { TreeBranch } from "@/components/TreeBranch";
-import { ExtractionModal } from "@/components/ExtractionModal";
+import { LinkModal } from "@/components/LinkModal";
 import { Pencil, Redo2, Undo2 } from "lucide-react";
 
 const Index = () => {
-  const { createExtractionRequest } = useExtractionRequests();
+  const {
+    links,
+    docReferences,
+    referenceOptions,
+    loading: linksLoading,
+    saveLink,
+    removeLink,
+    createReference,
+    setDocumentReference,
+    linkCount,
+  } = useDocumentLinks();
   const {
     tree, loading: treeLoading,
     canUndo, canRedo, undo, redo,
-    addChild, deleteNode, renameNode,
+    addChild, deleteNode, renameNode, toggleLeaf,
     addSection, deleteSection, renameSection,
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
   } = useTreeData();
@@ -19,6 +30,28 @@ const Index = () => {
   const [expanded, setExpanded] = useState<boolean | undefined>(undefined);
   const [editMode, setEditMode] = useState(false);
   const [extractionModalOpen, setExtractionModalOpen] = useState(false);
+
+  const [modal, setModal] = useState<{
+    open: boolean;
+    treePath: string;
+    section: string;
+    docName: string;
+    currentUrl: string;
+  }>({ open: false, treePath: "", section: "", docName: "", currentUrl: "" });
+
+  const handleEditLink = useCallback((treePath: string, section: string, docName: string, currentUrl: string) => {
+    setModal({ open: true, treePath, section, docName, currentUrl });
+  }, []);
+
+  const handleSave = useCallback(async (url: string) => {
+    if (url) await saveLink(modal.treePath, modal.section, modal.docName, url);
+    setModal((m) => ({ ...m, open: false }));
+  }, [modal, saveLink]);
+
+  const handleRemove = useCallback(async () => {
+    await removeLink(modal.treePath, modal.section, modal.docName);
+    setModal((m) => ({ ...m, open: false }));
+  }, [modal, removeLink]);
 
   const expandAll = () => { setExpanded(true); setGlobalToggle((t) => t + 1); };
   const collapseAll = () => { setExpanded(false); setGlobalToggle((t) => t + 1); };
@@ -75,19 +108,15 @@ const Index = () => {
           <Pencil className="w-3 h-3 inline mr-1" />
           {editMode ? "Fin édition" : "Éditer l'arbre"}
         </button>
-        <button onClick={() => setExtractionModalOpen(true)} className="toolbar-btn">
-          Nouvelle demande d'extraction
-        </button>
         <button onClick={() => void undo()} className="toolbar-btn" disabled={!canUndo} title="Revenir en arrière (Ctrl/Cmd + Z)">
           <Undo2 className="w-3 h-3 inline mr-1" /> Annuler
         </button>
         <button onClick={() => void redo()} className="toolbar-btn" disabled={!canRedo} title="Revenir en avant (Ctrl/Cmd + Y)">
           <Redo2 className="w-3 h-3 inline mr-1" /> Rétablir
         </button>
-      </div>
-
-      <div className="mb-3 text-[11px] text-muted-foreground">
-        Affichage actif de l'arborescence (mode sans gestion des liens).
+        <span className="text-[11px] text-muted-foreground ml-auto">
+          {linkCount > 0 ? `${linkCount} lien${linkCount > 1 ? "s" : ""} enregistré${linkCount > 1 ? "s" : ""}` : ""}
+        </span>
       </div>
 
       <ul className="tree-root">
@@ -98,10 +127,25 @@ const Index = () => {
           depth={0}
           expanded={expanded}
           globalToggle={globalToggle}
+          links={links}
+          docReferences={docReferences}
+          referenceOptions={referenceOptions}
+          onEditLink={handleEditLink}
+          onReferenceDocument={setDocumentReference}
           actions={actions}
           editMode={editMode}
         />
       </ul>
+
+      <LinkModal
+        open={modal.open}
+        docName={modal.docName}
+        currentUrl={modal.currentUrl}
+        onSave={handleSave}
+        onCreateReference={createReference}
+        onRemove={handleRemove}
+        onClose={() => setModal((m) => ({ ...m, open: false }))}
+      />
 
       <ExtractionModal
         open={extractionModalOpen}

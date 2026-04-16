@@ -17,13 +17,24 @@ interface TreeActions {
 interface Props {
   docs: DocSection[];
   nodePath: number[];
+  links: Record<string, string>;
+  docReferences: Record<string, string>;
+  referenceOptions: string[];
+  onEditLink: (treePath: string, section: string, docName: string, currentUrl: string) => void;
+  onReferenceDocument: (treePath: string, section: string, docName: string, referenceName: string) => Promise<boolean>;
   actions: TreeActions;
   editMode: boolean;
 }
 
 export function DocumentList({
   docs,
+  treePath,
   nodePath,
+  links,
+  docReferences,
+  referenceOptions,
+  onEditLink,
+  onReferenceDocument,
   actions,
   editMode,
 }: Props) {
@@ -31,6 +42,8 @@ export function DocumentList({
   const [showAddSection, setShowAddSection] = useState(false);
   const [addingDocInSection, setAddingDocInSection] = useState<number | null>(null);
   const [newDocName, setNewDocName] = useState("");
+  const [referenceInputs, setReferenceInputs] = useState<Record<string, string>>({});
+  const referenceListId = `reference-doc-options-${nodePath.join("-") || "root"}`;
 
   const handleAddSection = () => {
     const trimmed = addingSectionName.trim();
@@ -48,6 +61,16 @@ export function DocumentList({
       setNewDocName("");
       setAddingDocInSection(null);
     }
+  };
+
+  const saveReference = async (treePathValue: string, sectionName: string, docName: string, key: string) => {
+    const value = (referenceInputs[key] ?? docReferences[key] ?? "").trim();
+    const ok = await onReferenceDocument(treePathValue, sectionName, docName, value);
+    if (!ok && value) {
+      alert("Document de référence introuvable. Créez-le d'abord depuis le bouton lien.");
+      return;
+    }
+    setReferenceInputs((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -117,6 +140,65 @@ export function DocumentList({
                     </button>
                   </div>
                 )}
+
+                {url ? (
+                  <>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-link-bg text-link-fg border border-link-fg text-[10px] font-medium hover:opacity-80 transition-opacity"
+                    >
+                      <ExternalLink className="w-2.5 h-2.5" /> Accéder au document
+                    </a>
+                    <button
+                      onClick={() => onEditLink(treePath, group.section, item.name, url)}
+                      className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                      title="Modifier le lien"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                    <input
+                      list={referenceListId}
+                      value={referenceInputs[key] ?? docReferences[key] ?? ""}
+                      onChange={(e) => setReferenceInputs((prev) => ({ ...prev, [key]: e.target.value }))}
+                      onBlur={() => void saveReference(treePath, group.section, item.name, key)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void saveReference(treePath, group.section, item.name, key);
+                        }
+                      }}
+                      placeholder="Référencer un doc"
+                      className="w-44 shrink-0 px-2 py-0.5 rounded-md border border-dashed border-muted-foreground/30 text-[10px] bg-background text-foreground outline-none focus:border-link-fg"
+                      title="Associer ce document à une référence existante"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => onEditLink(treePath, group.section, item.name, "")}
+                      className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-dashed border-muted-foreground/30 text-muted-foreground text-[10px] hover:border-link-fg hover:text-link-fg hover:bg-link-bg transition-all"
+                    >
+                      <Pencil className="w-2.5 h-2.5" /> Ajouter un lien
+                    </button>
+                    <input
+                      list={referenceListId}
+                      value={referenceInputs[key] ?? docReferences[key] ?? ""}
+                      onChange={(e) => setReferenceInputs((prev) => ({ ...prev, [key]: e.target.value }))}
+                      onBlur={() => void saveReference(treePath, group.section, item.name, key)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void saveReference(treePath, group.section, item.name, key);
+                        }
+                      }}
+                      placeholder="Référencer un doc"
+                      className="w-44 shrink-0 px-2 py-0.5 rounded-md border border-dashed border-muted-foreground/30 text-[10px] bg-background text-foreground outline-none focus:border-link-fg"
+                      title="Associer ce document à une référence existante"
+                    />
+                  </>
+                )}
               </div>
             );
           })}
@@ -150,6 +232,12 @@ export function DocumentList({
           )}
         </div>
       ))}
+
+      <datalist id={referenceListId}>
+        {referenceOptions.map((option) => (
+          <option key={option} value={option} />
+        ))}
+      </datalist>
 
       {editMode && (
         <>

@@ -25,6 +25,11 @@ interface Props {
   depth: number;
   expanded: boolean | undefined;
   globalToggle: number;
+  links: Record<string, string>;
+  docReferences: Record<string, string>;
+  referenceOptions: string[];
+  onEditLink: (treePath: string, section: string, docName: string, currentUrl: string) => void;
+  onReferenceDocument: (treePath: string, section: string, docName: string, referenceName: string) => Promise<boolean>;
   actions: TreeActions;
   editMode: boolean;
 }
@@ -47,6 +52,11 @@ export function TreeBranch({
   depth,
   expanded,
   globalToggle,
+  links,
+  docReferences,
+  referenceOptions,
+  onEditLink,
+  onReferenceDocument,
   actions,
   editMode,
 }: Props) {
@@ -165,6 +175,11 @@ export function TreeBranch({
               depth={depth + 1}
               expanded={expanded}
               globalToggle={globalToggle}
+              links={links}
+              docReferences={docReferences}
+              referenceOptions={referenceOptions}
+              onEditLink={onEditLink}
+              onReferenceDocument={onReferenceDocument}
               actions={actions}
               editMode={editMode}
             />
@@ -186,6 +201,11 @@ export function TreeBranch({
         <DocumentList
           docs={node.docs || []}
           nodePath={indexPath}
+          links={links}
+          docReferences={docReferences}
+          referenceOptions={referenceOptions}
+          onEditLink={onEditLink}
+          onReferenceDocument={onReferenceDocument}
           actions={actions}
           editMode={editMode}
         />
