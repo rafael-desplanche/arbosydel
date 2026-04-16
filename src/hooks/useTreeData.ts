@@ -85,6 +85,12 @@ export function useTreeData() {
       for (const idx of parentPath) {
         current = current.children![idx];
       }
+
+      if (current.leaf) {
+        delete current.leaf;
+        delete current.docs;
+      }
+
       if (!current.children) current.children = [];
       current.children.push({ label, children: [] });
       saveTree(newTree);
@@ -123,23 +129,6 @@ export function useTreeData() {
   const updateNodeNote = useCallback(
     (path: number[], note: string) => {
       updateNodeAtPath(path, (node) => ({ ...node, note: note || undefined }));
-    },
-    [updateNodeAtPath]
-  );
-
-  const toggleLeaf = useCallback(
-    (path: number[]) => {
-      updateNodeAtPath(path, (node) => {
-        if (node.leaf) {
-          // Convert leaf to branch
-          const { leaf, docs, ...rest } = node;
-          return { ...rest, children: [] };
-        } else {
-          // Convert branch to leaf
-          const { children, ...rest } = node;
-          return { ...rest, leaf: true, docs: [] };
-        }
-      });
     },
     [updateNodeAtPath]
   );
@@ -253,7 +242,6 @@ export function useTreeData() {
     renameNode,
     updateNodeTag,
     updateNodeNote,
-    toggleLeaf,
     addSection,
     deleteSection,
     renameSection,

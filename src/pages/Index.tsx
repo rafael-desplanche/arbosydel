@@ -63,7 +63,7 @@ const Index = () => {
   }, [editMode, undo, redo]);
 
   const actions = {
-    addChild, deleteNode, renameNode, toggleLeaf,
+    addChild, deleteNode, renameNode,
     addSection, deleteSection, renameSection,
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
   };
