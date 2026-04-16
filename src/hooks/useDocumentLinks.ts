@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+const LOCAL_REFERENCE_CATALOG_KEY = "document_reference_catalog";
+
 interface LinkMap {
   [compositeKey: string]: string; // key = "treePath||section||docName" -> url
 }
@@ -22,6 +24,25 @@ export function useDocumentLinks() {
   const [docReferences, setDocReferences] = useState<ReferenceMap>({});
   const [referenceCatalog, setReferenceCatalog] = useState<ReferenceCatalog>({});
   const [loading, setLoading] = useState(true);
+
+  const saveCatalogToLocalStorage = useCallback((catalog: ReferenceCatalog) => {
+    try {
+      localStorage.setItem(LOCAL_REFERENCE_CATALOG_KEY, JSON.stringify(catalog));
+    } catch {
+      // ignore storage failures silently
+    }
+  }, []);
+
+  const readCatalogFromLocalStorage = useCallback((): ReferenceCatalog => {
+    try {
+      const raw = localStorage.getItem(LOCAL_REFERENCE_CATALOG_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as ReferenceCatalog;
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }, []);
 
   const fetchLinks = useCallback(async () => {
     const { data } = await supabase
@@ -59,7 +80,7 @@ export function useDocumentLinks() {
     }
 
     setLoading(false);
-  }, []);
+  }, [readCatalogFromLocalStorage, saveCatalogToLocalStorage]);
 
   useEffect(() => {
     fetchLinks();
