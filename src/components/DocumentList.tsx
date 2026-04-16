@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import type { DocSection } from "@/data/treeData";
-import { makeKey } from "@/hooks/useDocumentLinks";
 import { EditableLabel } from "./EditableLabel";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +16,6 @@ interface TreeActions {
 
 interface Props {
   docs: DocSection[];
-  treePath: string;
   nodePath: number[];
   links: Record<string, string>;
   docReferences: Record<string, string>;
@@ -102,8 +100,6 @@ export function DocumentList({
             )}
           </div>
           {group.items.map((item, ii) => {
-            const key = makeKey(treePath, group.section, item.name);
-            const url = links[key];
             return (
               <div key={ii} className="flex items-center gap-2 pl-2.5 relative doc-row group/doc">
                 <span className="absolute left-0 text-muted-foreground/50 text-xs">•</span>

@@ -80,7 +80,7 @@ const Index = () => {
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
   };
 
-  if (treeLoading || linksLoading) {
+  if (treeLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-muted-foreground text-sm">
         Chargement…

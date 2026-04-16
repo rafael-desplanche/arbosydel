@@ -200,7 +200,6 @@ export function TreeBranch({
       {isOpen && node.leaf && (
         <DocumentList
           docs={node.docs || []}
-          treePath={currentPath}
           nodePath={indexPath}
           links={links}
           docReferences={docReferences}
