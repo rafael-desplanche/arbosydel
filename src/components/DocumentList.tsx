@@ -116,6 +116,10 @@ export function DocumentList({
                   {item.optional && " (optionnel)"}
                 </span>
 
+                <span className="shrink-0 px-2 py-0.5 rounded-md border border-dashed border-muted-foreground/30 text-[10px] text-muted-foreground">
+                  Lien désactivé
+                </span>
+
                 {editMode && (
                   <div className="flex items-center gap-0.5 opacity-0 group-hover/doc:opacity-100 transition-opacity">
                     <button
