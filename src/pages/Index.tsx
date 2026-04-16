@@ -1,14 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTreeData } from "@/hooks/useTreeData";
 import { useDocumentLinks } from "@/hooks/useDocumentLinks";
 import { TreeBranch } from "@/components/TreeBranch";
 import { LinkModal } from "@/components/LinkModal";
-import { Pencil } from "lucide-react";
+import { Pencil, Redo2, Undo2 } from "lucide-react";
 
 const Index = () => {
   const { links, loading: linksLoading, saveLink, removeLink, linkCount } = useDocumentLinks();
   const {
     tree, loading: treeLoading,
+    canUndo, canRedo, undo, redo,
     addChild, deleteNode, renameNode, toggleLeaf,
     addSection, deleteSection, renameSection,
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
@@ -43,6 +44,24 @@ const Index = () => {
   const expandAll = () => { setExpanded(true); setGlobalToggle((t) => t + 1); };
   const collapseAll = () => { setExpanded(false); setGlobalToggle((t) => t + 1); };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!editMode || !(event.ctrlKey || event.metaKey)) return;
+      if (event.key.toLowerCase() === "z" && !event.shiftKey) {
+        event.preventDefault();
+        void undo();
+        return;
+      }
+      if (event.key.toLowerCase() === "y" || (event.key.toLowerCase() === "z" && event.shiftKey)) {
+        event.preventDefault();
+        void redo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editMode, undo, redo]);
+
   const actions = {
     addChild, deleteNode, renameNode, toggleLeaf,
     addSection, deleteSection, renameSection,
@@ -76,6 +95,12 @@ const Index = () => {
         >
           <Pencil className="w-3 h-3 inline mr-1" />
           {editMode ? "Fin édition" : "Éditer l'arbre"}
+        </button>
+        <button onClick={() => void undo()} className="toolbar-btn" disabled={!canUndo} title="Revenir en arrière (Ctrl/Cmd + Z)">
+          <Undo2 className="w-3 h-3 inline mr-1" /> Annuler
+        </button>
+        <button onClick={() => void redo()} className="toolbar-btn" disabled={!canRedo} title="Revenir en avant (Ctrl/Cmd + Y)">
+          <Redo2 className="w-3 h-3 inline mr-1" /> Rétablir
         </button>
         <span className="text-[11px] text-muted-foreground ml-auto">
           {linkCount > 0 ? `${linkCount} lien${linkCount > 1 ? "s" : ""} enregistré${linkCount > 1 ? "s" : ""}` : ""}
