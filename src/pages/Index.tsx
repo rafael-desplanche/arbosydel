@@ -4,7 +4,6 @@ import { useDocumentLinks } from "@/hooks/useDocumentLinks";
 import { useExtractionRequests } from "@/hooks/useExtractionRequests";
 import { TreeBranch } from "@/components/TreeBranch";
 import { LinkModal } from "@/components/LinkModal";
-import { ExtractionModal } from "@/components/ExtractionModal";
 import { Pencil, Redo2, Undo2 } from "lucide-react";
 
 const Index = () => {
@@ -19,11 +18,10 @@ const Index = () => {
     setDocumentReference,
     linkCount,
   } = useDocumentLinks();
-  const { createExtractionRequest } = useExtractionRequests();
   const {
     tree, loading: treeLoading,
     canUndo, canRedo, undo, redo,
-    addChild, deleteNode, renameNode,
+    addChild, deleteNode, renameNode, toggleLeaf,
     addSection, deleteSection, renameSection,
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
   } = useTreeData();
@@ -109,9 +107,6 @@ const Index = () => {
         >
           <Pencil className="w-3 h-3 inline mr-1" />
           {editMode ? "Fin édition" : "Éditer l'arbre"}
-        </button>
-        <button onClick={() => setExtractionModalOpen(true)} className="toolbar-btn">
-          Nouvelle demande d'extraction
         </button>
         <button onClick={() => void undo()} className="toolbar-btn" disabled={!canUndo} title="Revenir en arrière (Ctrl/Cmd + Z)">
           <Undo2 className="w-3 h-3 inline mr-1" /> Annuler

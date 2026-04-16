@@ -69,19 +69,14 @@ export function useDocumentLinks() {
       setDocReferences(refs);
     }
 
-    const localCatalog = readCatalogFromLocalStorage();
-
     if (refsData) {
-      const catalog: ReferenceCatalog = { ...localCatalog };
+      const catalog: ReferenceCatalog = {};
       for (const row of refsData) {
         if (row.name && row.url) {
           catalog[row.name] = row.url;
         }
       }
       setReferenceCatalog(catalog);
-      saveCatalogToLocalStorage(catalog);
-    } else {
-      setReferenceCatalog(localCatalog);
     }
 
     setLoading(false);
@@ -116,18 +111,16 @@ export function useDocumentLinks() {
     const cleanUrl = url.trim();
     if (!cleanName || !cleanUrl) return false;
 
-    await supabase
+    const { error } = await supabase
       .from("document_references")
       .upsert({ name: cleanName, url: cleanUrl }, { onConflict: "name" });
 
-    setReferenceCatalog((prev) => {
-      const next = { ...prev, [cleanName]: cleanUrl };
-      saveCatalogToLocalStorage(next);
-      return next;
-    });
+    if (!error) {
+      setReferenceCatalog((prev) => ({ ...prev, [cleanName]: cleanUrl }));
+    }
 
-    return true;
-  }, [saveCatalogToLocalStorage]);
+    return !error;
+  }, []);
 
   const setDocumentReference = useCallback(async (treePath: string, section: string, docName: string, referenceName: string) => {
     const key = makeKey(treePath, section, docName);
