@@ -31,7 +31,7 @@ export function useTreeData() {
       setTree(newTree);
       await supabase
         .from("tree_config")
-        .update({ data: newTree as unknown as Record<string, unknown> })
+        .update({ data: JSON.parse(JSON.stringify(newTree)) })
         .eq("id", configId);
     },
     [configId]
