@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           document_name: string
           id: string
+          reference_document_name: string | null
           section: string
           tree_path: string
           updated_at: string
@@ -28,6 +29,7 @@ export type Database = {
           created_at?: string
           document_name: string
           id?: string
+          reference_document_name?: string | null
           section: string
           tree_path: string
           updated_at?: string
@@ -37,10 +39,59 @@ export type Database = {
           created_at?: string
           document_name?: string
           id?: string
+          reference_document_name?: string | null
           section?: string
           tree_path?: string
           updated_at?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      document_references: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      extraction_requests: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
