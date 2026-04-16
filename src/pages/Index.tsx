@@ -1,13 +1,22 @@
 import { useState, useCallback } from "react";
-import { treeData } from "@/data/treeData";
+import { useTreeData } from "@/hooks/useTreeData";
 import { useDocumentLinks } from "@/hooks/useDocumentLinks";
 import { TreeBranch } from "@/components/TreeBranch";
 import { LinkModal } from "@/components/LinkModal";
+import { Pencil } from "lucide-react";
 
 const Index = () => {
-  const { links, loading, saveLink, removeLink, linkCount } = useDocumentLinks();
+  const { links, loading: linksLoading, saveLink, removeLink, linkCount } = useDocumentLinks();
+  const {
+    tree, loading: treeLoading,
+    addChild, deleteNode, renameNode, toggleLeaf,
+    addSection, deleteSection, renameSection,
+    addDocument, deleteDocument, renameDocument, toggleDocOptional,
+  } = useTreeData();
+
   const [globalToggle, setGlobalToggle] = useState(0);
   const [expanded, setExpanded] = useState<boolean | undefined>(undefined);
+  const [editMode, setEditMode] = useState(false);
 
   const [modal, setModal] = useState<{
     open: boolean;
@@ -22,9 +31,7 @@ const Index = () => {
   }, []);
 
   const handleSave = useCallback(async (url: string) => {
-    if (url) {
-      await saveLink(modal.treePath, modal.section, modal.docName, url);
-    }
+    if (url) await saveLink(modal.treePath, modal.section, modal.docName, url);
     setModal((m) => ({ ...m, open: false }));
   }, [modal, saveLink]);
 
@@ -33,17 +40,16 @@ const Index = () => {
     setModal((m) => ({ ...m, open: false }));
   }, [modal, removeLink]);
 
-  const expandAll = () => {
-    setExpanded(true);
-    setGlobalToggle((t) => t + 1);
+  const expandAll = () => { setExpanded(true); setGlobalToggle((t) => t + 1); };
+  const collapseAll = () => { setExpanded(false); setGlobalToggle((t) => t + 1); };
+
+  const actions = {
+    addChild, deleteNode, renameNode, toggleLeaf,
+    addSection, deleteSection, renameSection,
+    addDocument, deleteDocument, renameDocument, toggleDocOptional,
   };
 
-  const collapseAll = () => {
-    setExpanded(false);
-    setGlobalToggle((t) => t + 1);
-  };
-
-  if (loading) {
+  if (treeLoading || linksLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-muted-foreground text-sm">
         Chargement…
@@ -51,14 +57,25 @@ const Index = () => {
     );
   }
 
+  if (!tree) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-muted-foreground text-sm">
+        Aucune arborescence trouvée.
+      </div>
+    );
+  }
+
   return (
     <div className="tree-container max-w-4xl mx-auto px-4 py-6">
       <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <button onClick={expandAll} className="toolbar-btn">
-          Tout déplier
-        </button>
-        <button onClick={collapseAll} className="toolbar-btn">
-          Tout replier
+        <button onClick={expandAll} className="toolbar-btn">Tout déplier</button>
+        <button onClick={collapseAll} className="toolbar-btn">Tout replier</button>
+        <button
+          onClick={() => setEditMode(!editMode)}
+          className={editMode ? "toolbar-btn !border-link-fg !text-link-fg !bg-link-bg" : "toolbar-btn"}
+        >
+          <Pencil className="w-3 h-3 inline mr-1" />
+          {editMode ? "Fin édition" : "Éditer l'arbre"}
         </button>
         <span className="text-[11px] text-muted-foreground ml-auto">
           {linkCount > 0 ? `${linkCount} lien${linkCount > 1 ? "s" : ""} enregistré${linkCount > 1 ? "s" : ""}` : ""}
@@ -67,13 +84,16 @@ const Index = () => {
 
       <ul className="tree-root">
         <TreeBranch
-          node={treeData}
+          node={tree}
           path=""
+          indexPath={[]}
           depth={0}
           expanded={expanded}
           globalToggle={globalToggle}
           links={links}
           onEditLink={handleEditLink}
+          actions={actions}
+          editMode={editMode}
         />
       </ul>
 
