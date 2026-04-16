@@ -2,9 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { TreeNode, DocSection, DocItem } from "@/data/treeData";
 
+const cloneTree = (node: TreeNode) => JSON.parse(JSON.stringify(node)) as TreeNode;
+
 export function useTreeData() {
   const [tree, setTree] = useState<TreeNode | null>(null);
   const [configId, setConfigId] = useState<string | null>(null);
+  const [historyPast, setHistoryPast] = useState<TreeNode[]>([]);
+  const [historyFuture, setHistoryFuture] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchTree = useCallback(async () => {
@@ -17,6 +21,8 @@ export function useTreeData() {
     if (data) {
       setConfigId(data.id);
       setTree(data.data as unknown as TreeNode);
+      setHistoryPast([]);
+      setHistoryFuture([]);
     }
     setLoading(false);
   }, []);
@@ -25,16 +31,30 @@ export function useTreeData() {
     fetchTree();
   }, [fetchTree]);
 
-  const saveTree = useCallback(
+  const persistTree = useCallback(
     async (newTree: TreeNode) => {
       if (!configId) return;
-      setTree(newTree);
       await supabase
         .from("tree_config")
-        .update({ data: JSON.parse(JSON.stringify(newTree)) })
+        .update({ data: cloneTree(newTree) })
         .eq("id", configId);
     },
     [configId]
+  );
+
+  const saveTree = useCallback(
+    async (newTree: TreeNode, options?: { skipHistory?: boolean }) => {
+      if (!configId) return;
+
+      if (!options?.skipHistory && tree) {
+        setHistoryPast((prev) => [...prev, cloneTree(tree)]);
+        setHistoryFuture([]);
+      }
+
+      setTree(newTree);
+      await persistTree(newTree);
+    },
+    [configId, tree, persistTree]
   );
 
   // Helper: deep clone + update a node at a given path
@@ -201,9 +221,33 @@ export function useTreeData() {
     [updateNodeAtPath]
   );
 
+  const undo = useCallback(async () => {
+    if (!tree || historyPast.length === 0) return;
+
+    const previous = cloneTree(historyPast[historyPast.length - 1]);
+    setHistoryPast((prev) => prev.slice(0, -1));
+    setHistoryFuture((prev) => [cloneTree(tree), ...prev]);
+    setTree(previous);
+    await persistTree(previous);
+  }, [tree, historyPast, persistTree]);
+
+  const redo = useCallback(async () => {
+    if (!tree || historyFuture.length === 0) return;
+
+    const next = cloneTree(historyFuture[0]);
+    setHistoryFuture((prev) => prev.slice(1));
+    setHistoryPast((prev) => [...prev, cloneTree(tree)]);
+    setTree(next);
+    await persistTree(next);
+  }, [tree, historyFuture, persistTree]);
+
   return {
     tree,
     loading,
+    canUndo: historyPast.length > 0,
+    canRedo: historyFuture.length > 0,
+    undo,
+    redo,
     addChild,
     deleteNode,
     renameNode,
