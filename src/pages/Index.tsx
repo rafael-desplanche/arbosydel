@@ -1,15 +1,26 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTreeData } from "@/hooks/useTreeData";
 import { useDocumentLinks } from "@/hooks/useDocumentLinks";
 import { TreeBranch } from "@/components/TreeBranch";
 import { LinkModal } from "@/components/LinkModal";
-import { Pencil } from "lucide-react";
+import { Pencil, Redo2, Undo2 } from "lucide-react";
 
 const Index = () => {
-  const { links, loading: linksLoading, saveLink, removeLink, linkCount } = useDocumentLinks();
+  const {
+    links,
+    docReferences,
+    referenceOptions,
+    loading: linksLoading,
+    saveLink,
+    removeLink,
+    createReference,
+    setDocumentReference,
+    linkCount,
+  } = useDocumentLinks();
   const {
     tree, loading: treeLoading,
-    addChild, deleteNode, renameNode, toggleLeaf,
+    canUndo, canRedo, undo, redo,
+    addChild, deleteNode, renameNode,
     addSection, deleteSection, renameSection,
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
   } = useTreeData();
@@ -43,8 +54,26 @@ const Index = () => {
   const expandAll = () => { setExpanded(true); setGlobalToggle((t) => t + 1); };
   const collapseAll = () => { setExpanded(false); setGlobalToggle((t) => t + 1); };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!editMode || !(event.ctrlKey || event.metaKey)) return;
+      if (event.key.toLowerCase() === "z" && !event.shiftKey) {
+        event.preventDefault();
+        void undo();
+        return;
+      }
+      if (event.key.toLowerCase() === "y" || (event.key.toLowerCase() === "z" && event.shiftKey)) {
+        event.preventDefault();
+        void redo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editMode, undo, redo]);
+
   const actions = {
-    addChild, deleteNode, renameNode, toggleLeaf,
+    addChild, deleteNode, renameNode,
     addSection, deleteSection, renameSection,
     addDocument, deleteDocument, renameDocument, toggleDocOptional,
   };
@@ -77,6 +106,12 @@ const Index = () => {
           <Pencil className="w-3 h-3 inline mr-1" />
           {editMode ? "Fin édition" : "Éditer l'arbre"}
         </button>
+        <button onClick={() => void undo()} className="toolbar-btn" disabled={!canUndo} title="Revenir en arrière (Ctrl/Cmd + Z)">
+          <Undo2 className="w-3 h-3 inline mr-1" /> Annuler
+        </button>
+        <button onClick={() => void redo()} className="toolbar-btn" disabled={!canRedo} title="Revenir en avant (Ctrl/Cmd + Y)">
+          <Redo2 className="w-3 h-3 inline mr-1" /> Rétablir
+        </button>
         <span className="text-[11px] text-muted-foreground ml-auto">
           {linkCount > 0 ? `${linkCount} lien${linkCount > 1 ? "s" : ""} enregistré${linkCount > 1 ? "s" : ""}` : ""}
         </span>
@@ -91,7 +126,10 @@ const Index = () => {
           expanded={expanded}
           globalToggle={globalToggle}
           links={links}
+          docReferences={docReferences}
+          referenceOptions={referenceOptions}
           onEditLink={handleEditLink}
+          onReferenceDocument={setDocumentReference}
           actions={actions}
           editMode={editMode}
         />
@@ -102,6 +140,7 @@ const Index = () => {
         docName={modal.docName}
         currentUrl={modal.currentUrl}
         onSave={handleSave}
+        onCreateReference={createReference}
         onRemove={handleRemove}
         onClose={() => setModal((m) => ({ ...m, open: false }))}
       />

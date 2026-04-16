@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, Plus, Trash2, ToggleLeft } from "lucide-react";
+import { ChevronRight, Plus, Trash2 } from "lucide-react";
 import type { TreeNode } from "@/data/treeData";
 import { DocumentList } from "./DocumentList";
 import { EditableLabel } from "./EditableLabel";
@@ -9,7 +9,6 @@ interface TreeActions {
   addChild: (parentPath: number[], label: string) => void;
   deleteNode: (path: number[]) => void;
   renameNode: (path: number[], newLabel: string) => void;
-  toggleLeaf: (path: number[]) => void;
   addSection: (path: number[], sectionName: string) => void;
   deleteSection: (path: number[], sectionIdx: number) => void;
   renameSection: (path: number[], sectionIdx: number, newName: string) => void;
@@ -27,7 +26,10 @@ interface Props {
   expanded: boolean | undefined;
   globalToggle: number;
   links: Record<string, string>;
+  docReferences: Record<string, string>;
+  referenceOptions: string[];
   onEditLink: (treePath: string, section: string, docName: string, currentUrl: string) => void;
+  onReferenceDocument: (treePath: string, section: string, docName: string, referenceName: string) => Promise<boolean>;
   actions: TreeActions;
   editMode: boolean;
 }
@@ -43,10 +45,24 @@ const tagColors: Record<string, string> = {
   pink: "bg-tag-pink text-tag-pink-fg",
 };
 
-export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggle, links, onEditLink, actions, editMode }: Props) {
+export function TreeBranch({
+  node,
+  path,
+  indexPath,
+  depth,
+  expanded,
+  globalToggle,
+  links,
+  docReferences,
+  referenceOptions,
+  onEditLink,
+  onReferenceDocument,
+  actions,
+  editMode,
+}: Props) {
   const hasChildren = !!(node.children && node.children.length > 0);
   const hasContent = hasChildren || node.leaf;
-  const defaultOpen = depth < 2 && !node.leaf;
+  const defaultOpen = depth < 2;
 
   const [isOpen, setIsOpen] = useState(expanded ?? defaultOpen);
   const [adding, setAdding] = useState(false);
@@ -76,8 +92,7 @@ export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggl
           className={cn(
             "inline-flex items-center gap-2 py-1 px-3 rounded-lg text-sm leading-relaxed transition-colors",
             hasContent && "cursor-pointer font-medium hover:bg-muted",
-            !hasContent && "cursor-default",
-            node.leaf && "text-muted-foreground text-[13px]"
+            !hasContent && "cursor-default"
           )}
           onClick={() => hasContent && setIsOpen(!isOpen)}
         >
@@ -106,24 +121,12 @@ export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggl
 
         {editMode && depth > 0 && (
           <div className="flex items-center gap-0.5 opacity-0 group-hover/branch:opacity-100 transition-opacity">
-            {!node.leaf && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setAdding(true); }}
-                className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-                title="Ajouter une sous-branche"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            )}
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                actions.toggleLeaf(indexPath);
-              }}
+              onClick={(e) => { e.stopPropagation(); setAdding(true); }}
               className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              title={node.leaf ? "Convertir en branche" : "Convertir en feuille"}
+              title="Ajouter une sous-branche"
             >
-              <ToggleLeft className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={(e) => {
@@ -173,7 +176,10 @@ export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggl
               expanded={expanded}
               globalToggle={globalToggle}
               links={links}
+              docReferences={docReferences}
+              referenceOptions={referenceOptions}
               onEditLink={onEditLink}
+              onReferenceDocument={onReferenceDocument}
               actions={actions}
               editMode={editMode}
             />
@@ -197,7 +203,10 @@ export function TreeBranch({ node, path, indexPath, depth, expanded, globalToggl
           treePath={currentPath}
           nodePath={indexPath}
           links={links}
+          docReferences={docReferences}
+          referenceOptions={referenceOptions}
           onEditLink={onEditLink}
+          onReferenceDocument={onReferenceDocument}
           actions={actions}
           editMode={editMode}
         />
